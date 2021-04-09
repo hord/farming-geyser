@@ -52,6 +52,9 @@ async function main() {
   await distributionToken.transfer(lockedPool, "5000000000000000000000");
   console.log('Sent 5000 distribution tokens to locked pool');
 
+  // Update accounting so the application is ready to go.
+  await tokenGeyser.updateAccounting();
+
   for (const wallet of testingWallets) {
       let receipt = await stakingToken.transfer(wallet,'300000000000000000000')
       console.log('Sent 300 tokens to: ', wallet)
