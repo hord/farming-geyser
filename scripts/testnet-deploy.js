@@ -12,18 +12,15 @@ async function main() {
       '0xF1616E983c42BB1E490EA7F0cEEF40A710554C85', // Nikola
   ];
 
-  const totalSupplyStakingToken = "10000000000000000000000" //10k tokens
-  const totalSupplyDistributionToken = "50000000000000000000000" //50k distribution tokens
-
   const StakingToken = await hre.ethers.getContractFactory("MockERC20");
-  const stakingToken = await StakingToken.deploy(totalSupplyStakingToken);
+  const stakingToken = await StakingToken.deploy('Uniswap LP token', 'UNI_LP');
   await stakingToken.deployed();
   console.log("Staking token contract deployed to:", stakingToken.address);
   saveContractAddress(hre.network.name, 'stakingToken', stakingToken.address, (await hre.artifacts.readArtifact("MockERC20")).abi);
 
 
   const DistributionToken = await hre.ethers.getContractFactory("MockERC20");
-  const distributionToken = await DistributionToken.deploy(totalSupplyDistributionToken);
+  const distributionToken = await DistributionToken.deploy('HordToken', 'HORD');
   await distributionToken.deployed();
   console.log("Distribution token contract deployed to:", distributionToken.address);
   saveContractAddress(hre.network.name, 'distributionToken', distributionToken.address,  (await hre.artifacts.readArtifact("MockERC20")).abi);
