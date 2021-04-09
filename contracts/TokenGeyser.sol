@@ -51,10 +51,12 @@ contract TokenGeyser is IStaking, Ownable {
     //
     uint256 public totalLockedShares = 0;
     uint256 public totalStakingShares = 0;
+    uint256 public totalRewardsClaimed = 0;
     uint256 private _totalStakingShareSeconds = 0;
     uint256 private _lastAccountingTimestampSec = now;
     uint256 private _maxUnlockSchedules = 0;
     uint256 private _initialSharesPerToken = 0;
+
 
     //
     // User accounting state
@@ -283,6 +285,9 @@ contract TokenGeyser is IStaking, Ownable {
         // Already set in updateAccounting
         // _lastAccountingTimestampSec = now;
 
+        // Update global accounting with amount of total tokens being claimed
+        totalRewardsClaimed = totalRewardsClaimed.add(rewardAmount);
+
         // interactions
         require(_stakingPool.transfer(msg.sender, amount),
             'TokenGeyser: transfer out of staking pool failed');
@@ -340,10 +345,6 @@ contract TokenGeyser is IStaking, Ownable {
     function computeRewardAmount(address _user) public view returns (uint256) {
         // Get user total amount
         uint256 amount = totalStakedFor(_user);
-
-        if(amount == 0) {
-            return 0;
-        }
 
         // Compute staking shares to burn
         uint256 stakingSharesToBurn = totalStakingShares.mul(amount).div(totalStaked());
