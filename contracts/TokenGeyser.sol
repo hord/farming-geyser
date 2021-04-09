@@ -120,6 +120,27 @@ contract TokenGeyser is IStaking, Ownable {
     }
 
     /**
+     * @return The address of contract holding tokens staked
+     */
+    function getStakingPool() external view returns (address) {
+        return address(_stakingPool);
+    }
+
+    /**
+     * @return The address of contract holding unlocked rewards tokens
+     */
+    function getUnlockedPool() external view returns (address) {
+        return address(_unlockedPool);
+    }
+
+    /**
+     * @return The address of contract holding locked rewards tokens
+     */
+    function getLockedPool() external view returns (address) {
+        return address(_lockedPool);
+    }
+
+    /**
      * @return The token users deposit as stake.
      */
     function getStakingToken() public view returns (IERC20) {
