@@ -11,12 +11,17 @@ function getSavedContractAddresses() {
     return JSON.parse(json)
 }
 
-function saveContractAddress(network, contract, address) {
+function saveContractAddress(network, contract, address, abi) {
     const addrs = getSavedContractAddresses()
     addrs[network] = addrs[network] || {}
-    addrs[network][contract] = address
+    const config = {
+        'address' : address,
+        'abi' : abi
+    }
+    addrs[network][contract] = config;
     fs.writeFileSync(path.join(__dirname, `../contract-addresses.json`), JSON.stringify(addrs, null, '    '))
 }
+
 
 module.exports = {
     getSavedContractAddresses,

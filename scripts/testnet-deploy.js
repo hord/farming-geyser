@@ -8,13 +8,15 @@ async function main() {
   const StakingToken = await hre.ethers.getContractFactory("MockERC20");
   const stakingToken = await StakingToken.deploy(totalSupply);
   await stakingToken.deployed();
-  saveContractAddress(hre.network.name, 'stakingToken', stakingToken.address);
+  console.log("Staking token contract deployed to:", stakingToken.address);
+  saveContractAddress(hre.network.name, 'stakingToken', stakingToken.address, (await hre.artifacts.readArtifact("MockERC20")).abi);
 
 
   const DistributionToken = await hre.ethers.getContractFactory("MockERC20");
   const distributionToken = await DistributionToken.deploy(totalSupply);
   await distributionToken.deployed();
-  saveContractAddress(hre.network.name, 'distributionToken', distributionToken.address);
+  console.log("Distribution token contract deployed to:", distributionToken.address);
+  saveContractAddress(hre.network.name, 'distributionToken', distributionToken.address,  (await hre.artifacts.readArtifact("MockERC20")).abi);
 
   const tokenGeyserParams = {
       'stakingToken' : stakingToken.address,
@@ -25,7 +27,7 @@ async function main() {
       'inititalSharesPerToken': 1000000
   }
 
-  const TokenGeyser = await hre.ethers.getContractFactory('TokenGeyser');
+  const TokenGeyser = await hre.ethers.getContractFactory("TokenGeyser");
   const tokenGeyser = await TokenGeyser.deploy(
       tokenGeyserParams.stakingToken,
       tokenGeyserParams.distributionToken,
@@ -35,8 +37,12 @@ async function main() {
       tokenGeyserParams.inititalSharesPerToken
   );
   await tokenGeyser.deployed();
-  saveContractAddress(hre.network.name, 'tokenGeyser', tokenGeyser.address);
+  console.log("TokenGeyser contract deployed to:", tokenGeyser.address);
+  saveContractAddress(hre.network.name, 'tokenGeyser', tokenGeyser.address,  (await hre.artifacts.readArtifact("TokenGeyser")).abi);
 
+  let lockedPool = await tokenGeyser.getLockedPool();
+
+  await distributionToken.transfer(lockedPool, "1000000000000000000000000");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
