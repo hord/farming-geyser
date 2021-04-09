@@ -1,25 +1,42 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional 
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
+const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile 
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  const totalSupply = "5000000000000000000000000" //5M
 
-  // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
 
-  await greeter.deployed();
+  const StakingToken = await hre.ethers.getContractFactory("MockERC20");
+  const stakingToken = await StakingToken.deploy(totalSupply);
+  await stakingToken.deployed();
+  saveContractAddress(hre.network.name, 'stakingToken', stakingToken.address);
 
-  console.log("Greeter deployed to:", greeter.address);
+
+  const DistributionToken = await hre.ethers.getContractFactory("MockERC20");
+  const distributionToken = await DistributionToken.deploy(totalSupply);
+  await distributionToken.deployed();
+  saveContractAddress(hre.network.name, 'distributionToken', distributionToken.address);
+
+  const tokenGeyserParams = {
+      'stakingToken' : stakingToken.address,
+      'distributionToken' : distributionToken.address,
+      'maxUnlockSchedules' : 10000, // Avoid hitting gas limit
+      'startBonus' : 33, // Start bonus 33%
+      'bonusPeriodSecs' : 432000, //5 days
+      'inititalSharesPerToken': 1000000
+  }
+
+  const TokenGeyser = await hre.ethers.getContractFactory('TokenGeyser');
+  const tokenGeyser = await TokenGeyser.deploy(
+      tokenGeyserParams.stakingToken,
+      tokenGeyserParams.distributionToken,
+      tokenGeyserParams.maxUnlockSchedules,
+      tokenGeyserParams.startBonus,
+      tokenGeyserParams.bonusPeriodSecs,
+      tokenGeyserParams.inititalSharesPerToken
+  );
+  await tokenGeyser.deployed();
+  saveContractAddress(hre.network.name, 'tokenGeyser', tokenGeyser.address);
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere
