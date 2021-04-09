@@ -29,9 +29,9 @@ async function main() {
       'stakingToken' : stakingToken.address,
       'distributionToken' : distributionToken.address,
       'maxUnlockSchedules' : 10000, // Avoid hitting gas limit
-      'startBonus' : 33, // Start bonus 33%
-      'bonusPeriodSecs' : 432000, //5 days
-      'inititalSharesPerToken': 1000000
+      'startBonus' : 10, // Start bonus 33%
+      'bonusPeriodSecs' : 864000, //5 days
+      'initialSharesPerToken': 1000000
   }
 
   const TokenGeyser = await hre.ethers.getContractFactory("TokenGeyser");
@@ -41,9 +41,10 @@ async function main() {
       tokenGeyserParams.maxUnlockSchedules,
       tokenGeyserParams.startBonus,
       tokenGeyserParams.bonusPeriodSecs,
-      tokenGeyserParams.inititalSharesPerToken
+      tokenGeyserParams.initialSharesPerToken
   );
   await tokenGeyser.deployed();
+  console.log('Token geyser setup: ', tokenGeyserParams);
   console.log("TokenGeyser contract deployed to:", tokenGeyser.address);
   saveContractAddress(hre.network.name, 'tokenGeyser', tokenGeyser.address,  (await hre.artifacts.readArtifact("TokenGeyser")).abi);
 
@@ -60,7 +61,6 @@ async function main() {
       console.log('Sent 300 tokens to: ', wallet)
       console.log('TxId: ', receipt.hash);
   }
-
 }
 
 // We recommend this pattern to be able to use async/await everywhere
