@@ -1,17 +1,31 @@
 {
     "ropsten": {
         "stakingToken": {
-            "address": "0xbDb5dB5C17709046DF37986Ee630CA0aed69ADA4",
+            "address": "0x4EfEf6A40Cd04aC00b7e58cd2cd8d62060eC307d",
             "abi": [
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "name",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
                 {
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -44,15 +58,15 @@
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "sender",
+                            "name": "_from",
                             "type": "address"
                         },
                         {
-                            "name": "recipient",
+                            "name": "_to",
                             "type": "address"
                         },
                         {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -68,18 +82,32 @@
                     "type": "function"
                 },
                 {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "decimals",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint8"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "addedValue",
+                            "name": "_subtractedValue",
                             "type": "uint256"
                         }
                     ],
-                    "name": "increaseAllowance",
+                    "name": "decreaseApproval",
                     "outputs": [
                         {
                             "name": "",
@@ -94,15 +122,29 @@
                     "constant": true,
                     "inputs": [
                         {
-                            "name": "account",
+                            "name": "_owner",
                             "type": "address"
                         }
                     ],
                     "name": "balanceOf",
                     "outputs": [
                         {
-                            "name": "",
+                            "name": "balance",
                             "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "symbol",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
                         }
                     ],
                     "payable": false,
@@ -113,34 +155,11 @@
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_to",
                             "type": "address"
                         },
                         {
-                            "name": "subtractedValue",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "decreaseAllowance",
-                    "outputs": [
-                        {
-                            "name": "",
-                            "type": "bool"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "name": "recipient",
-                            "type": "address"
-                        },
-                        {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -156,14 +175,37 @@
                     "type": "function"
                 },
                 {
-                    "constant": true,
+                    "constant": false,
                     "inputs": [
                         {
-                            "name": "owner",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "spender",
+                            "name": "_addedValue",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "increaseApproval",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "name": "_owner",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_spender",
                             "type": "address"
                         }
                     ],
@@ -181,8 +223,12 @@
                 {
                     "inputs": [
                         {
-                            "name": "_totalSupply",
-                            "type": "uint256"
+                            "name": "_name",
+                            "type": "string"
+                        },
+                        {
+                            "name": "_symbol",
+                            "type": "string"
                         }
                     ],
                     "payable": false,
@@ -236,17 +282,31 @@
             ]
         },
         "distributionToken": {
-            "address": "0xbbCE81abDE56F43D7E2fdf4f5a005aB306D769CF",
+            "address": "0xe1B18bd011670146968F09D1A3a05cC894F71771",
             "abi": [
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "name",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
                 {
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -279,15 +339,15 @@
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "sender",
+                            "name": "_from",
                             "type": "address"
                         },
                         {
-                            "name": "recipient",
+                            "name": "_to",
                             "type": "address"
                         },
                         {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -303,18 +363,32 @@
                     "type": "function"
                 },
                 {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "decimals",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "uint8"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "addedValue",
+                            "name": "_subtractedValue",
                             "type": "uint256"
                         }
                     ],
-                    "name": "increaseAllowance",
+                    "name": "decreaseApproval",
                     "outputs": [
                         {
                             "name": "",
@@ -329,15 +403,29 @@
                     "constant": true,
                     "inputs": [
                         {
-                            "name": "account",
+                            "name": "_owner",
                             "type": "address"
                         }
                     ],
                     "name": "balanceOf",
                     "outputs": [
                         {
-                            "name": "",
+                            "name": "balance",
                             "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "symbol",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "string"
                         }
                     ],
                     "payable": false,
@@ -348,34 +436,11 @@
                     "constant": false,
                     "inputs": [
                         {
-                            "name": "spender",
+                            "name": "_to",
                             "type": "address"
                         },
                         {
-                            "name": "subtractedValue",
-                            "type": "uint256"
-                        }
-                    ],
-                    "name": "decreaseAllowance",
-                    "outputs": [
-                        {
-                            "name": "",
-                            "type": "bool"
-                        }
-                    ],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                },
-                {
-                    "constant": false,
-                    "inputs": [
-                        {
-                            "name": "recipient",
-                            "type": "address"
-                        },
-                        {
-                            "name": "amount",
+                            "name": "_value",
                             "type": "uint256"
                         }
                     ],
@@ -391,14 +456,37 @@
                     "type": "function"
                 },
                 {
-                    "constant": true,
+                    "constant": false,
                     "inputs": [
                         {
-                            "name": "owner",
+                            "name": "_spender",
                             "type": "address"
                         },
                         {
-                            "name": "spender",
+                            "name": "_addedValue",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "increaseApproval",
+                    "outputs": [
+                        {
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "name": "_owner",
+                            "type": "address"
+                        },
+                        {
+                            "name": "_spender",
                             "type": "address"
                         }
                     ],
@@ -416,8 +504,12 @@
                 {
                     "inputs": [
                         {
-                            "name": "_totalSupply",
-                            "type": "uint256"
+                            "name": "_name",
+                            "type": "string"
+                        },
+                        {
+                            "name": "_symbol",
+                            "type": "string"
                         }
                     ],
                     "payable": false,
@@ -471,7 +563,7 @@
             ]
         },
         "tokenGeyser": {
-            "address": "0x19a3d8870bF0b49f45e0588c6a0c27C675492899",
+            "address": "0x84075370AdA7813f858690B564D0Bc68B540CAc6",
             "abi": [
                 {
                     "constant": false,
