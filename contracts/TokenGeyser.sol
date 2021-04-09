@@ -340,6 +340,11 @@ contract TokenGeyser is IStaking, Ownable {
     function computeRewardAmount(address _user) public view returns (uint256) {
         // Get user total amount
         uint256 amount = totalStakedFor(_user);
+
+        if(amount == 0) {
+            return 0;
+        }
+
         // Compute staking shares to burn
         uint256 stakingSharesToBurn = totalStakingShares.mul(amount).div(totalStaked());
 
