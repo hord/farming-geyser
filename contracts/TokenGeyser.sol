@@ -1,4 +1,4 @@
-pragma solidity ^0.5.1;
+pragma solidity 0.5.1;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
@@ -28,8 +28,8 @@ import "./TokenPool.sol";
 contract TokenGeyser is IStaking, Ownable {
     using SafeMath for uint256;
 
-    event Staked(address indexed user, uint256 amount, uint256 total);
-    event Unstaked(address indexed user, uint256 amount, uint256 total);
+    event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
+    event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
     event TokensClaimed(address indexed user, uint256 amount);
     event TokensLocked(uint256 amount, uint256 durationSec, uint256 total);
     // amount: Unlocked tokens, total: Total locked tokens
@@ -102,7 +102,7 @@ contract TokenGeyser is IStaking, Ownable {
      * @param initialSharesPerToken Number of shares to mint per staking token on first stake.
      */
     constructor(IERC20 stakingToken, IERC20 distributionToken, uint256 maxUnlockSchedules,
-                uint256 startBonus_, uint256 bonusPeriodSec_, uint256 initialSharesPerToken) public {
+        uint256 startBonus_, uint256 bonusPeriodSec_, uint256 initialSharesPerToken) public {
         // The start bonus must be some fraction of the max. (i.e. <= 100%)
         require(startBonus_ <= 10**BONUS_DECIMALS, 'TokenGeyser: start bonus too high');
         // If no period is desired, instead set startBonus = 100%
@@ -159,7 +159,7 @@ contract TokenGeyser is IStaking, Ownable {
      * @dev Transfers amount of deposit tokens from the user.
      * @param amount Number of deposit tokens to stake.
      */
-    function stake(uint256 amount) external {
+    function stake(uint256 amount, bytes calldata data) external {
         _stakeFor(msg.sender, msg.sender, amount);
     }
 
@@ -168,7 +168,7 @@ contract TokenGeyser is IStaking, Ownable {
      * @param user User address who gains credit for this stake operation.
      * @param amount Number of deposit tokens to stake.
      */
-    function stakeFor(address user, uint256 amount) external onlyOwner {
+    function stakeFor(address user, uint256 amount, bytes calldata data) external onlyOwner {
         _stakeFor(msg.sender, user, amount);
     }
 
@@ -182,11 +182,11 @@ contract TokenGeyser is IStaking, Ownable {
         require(amount > 0, 'TokenGeyser: stake amount is zero');
         require(beneficiary != address(0), 'TokenGeyser: beneficiary is zero address');
         require(totalStakingShares == 0 || totalStaked() > 0,
-                'TokenGeyser: Invalid state. Staking shares exist, but no staking tokens do');
+            'TokenGeyser: Invalid state. Staking shares exist, but no staking tokens do');
 
         uint256 mintedStakingShares = (totalStakingShares > 0)
-            ? totalStakingShares.mul(amount).div(totalStaked())
-            : amount.mul(_initialSharesPerToken);
+        ? totalStakingShares.mul(amount).div(totalStaked())
+        : amount.mul(_initialSharesPerToken);
         require(mintedStakingShares > 0, 'TokenGeyser: Stake amount is too small');
 
         updateAccounting();
@@ -208,7 +208,7 @@ contract TokenGeyser is IStaking, Ownable {
         require(_stakingPool.token().transferFrom(staker, address(_stakingPool), amount),
             'TokenGeyser: transfer into staking pool failed');
 
-        emit Staked(beneficiary, amount, totalStakedFor(beneficiary));
+        emit Staked(beneficiary, amount, totalStakedFor(beneficiary), "");
     }
 
     /**
@@ -216,7 +216,7 @@ contract TokenGeyser is IStaking, Ownable {
      * alotted number of distribution tokens.
      * @param amount Number of deposit tokens to unstake / withdraw.
      */
-    function unstake(uint256 amount) external {
+    function unstake(uint256 amount, bytes calldata data) external {
         _unstake(amount);
     }
 
@@ -289,11 +289,11 @@ contract TokenGeyser is IStaking, Ownable {
         require(_unlockedPool.transfer(msg.sender, rewardAmount),
             'TokenGeyser: transfer out of unlocked pool failed');
 
-        emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender));
+        emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), "");
         emit TokensClaimed(msg.sender, rewardAmount);
 
         require(totalStakingShares == 0 || totalStaked() > 0,
-                "TokenGeyser: Error unstaking. Staking shares exist, but no staking tokens do");
+            "TokenGeyser: Error unstaking. Staking shares exist, but no staking tokens do");
         return rewardAmount;
     }
 
@@ -312,13 +312,13 @@ contract TokenGeyser is IStaking, Ownable {
      *         newly added tokens.
      */
     function computeNewReward(uint256 currentRewardTokens,
-                                uint256 stakingShareSeconds,
-                                uint256 stakeTimeSec) private view returns (uint256) {
+        uint256 stakingShareSeconds,
+        uint256 stakeTimeSec) private view returns (uint256) {
 
         uint256 newRewardTokens =
-            totalUnlocked()
-            .mul(stakingShareSeconds)
-            .div(_totalStakingShareSeconds);
+        totalUnlocked()
+        .mul(stakingShareSeconds)
+        .div(_totalStakingShareSeconds);
 
         if (stakeTimeSec >= bonusPeriodSec) {
             return currentRewardTokens.add(newRewardTokens);
@@ -326,10 +326,10 @@ contract TokenGeyser is IStaking, Ownable {
 
         uint256 oneHundredPct = 10**BONUS_DECIMALS;
         uint256 bonusedReward =
-            startBonus
-            .add(oneHundredPct.sub(startBonus).mul(stakeTimeSec).div(bonusPeriodSec))
-            .mul(newRewardTokens)
-            .div(oneHundredPct);
+        startBonus
+        .add(oneHundredPct.sub(startBonus).mul(stakeTimeSec).div(bonusPeriodSec))
+        .mul(newRewardTokens)
+        .div(oneHundredPct);
         return currentRewardTokens.add(bonusedReward);
     }
 
@@ -385,7 +385,7 @@ contract TokenGeyser is IStaking, Ownable {
      */
     function totalStakedFor(address addr) public view returns (uint256) {
         return totalStakingShares > 0 ?
-            totalStaked().mul(_userTotals[addr].stakingShares).div(totalStakingShares) : 0;
+        totalStaked().mul(_userTotals[addr].stakingShares).div(totalStakingShares) : 0;
     }
 
     /**
@@ -421,34 +421,34 @@ contract TokenGeyser is IStaking, Ownable {
 
         // Global accounting
         uint256 newStakingShareSeconds =
-            now
-            .sub(_lastAccountingTimestampSec)
-            .mul(totalStakingShares);
+        now
+        .sub(_lastAccountingTimestampSec)
+        .mul(totalStakingShares);
         _totalStakingShareSeconds = _totalStakingShareSeconds.add(newStakingShareSeconds);
         _lastAccountingTimestampSec = now;
 
         // User Accounting
         UserTotals storage totals = _userTotals[msg.sender];
         uint256 newUserStakingShareSeconds =
-            now
-            .sub(totals.lastAccountingTimestampSec)
-            .mul(totals.stakingShares);
+        now
+        .sub(totals.lastAccountingTimestampSec)
+        .mul(totals.stakingShares);
         totals.stakingShareSeconds =
-            totals.stakingShareSeconds
-            .add(newUserStakingShareSeconds);
+        totals.stakingShareSeconds
+        .add(newUserStakingShareSeconds);
         totals.lastAccountingTimestampSec = now;
 
         uint256 totalUserRewards = (_totalStakingShareSeconds > 0)
-            ? totalUnlocked().mul(totals.stakingShareSeconds).div(_totalStakingShareSeconds)
-            : 0;
+        ? totalUnlocked().mul(totals.stakingShareSeconds).div(_totalStakingShareSeconds)
+        : 0;
 
         return (
-            totalLocked(),
-            totalUnlocked(),
-            totals.stakingShareSeconds,
-            _totalStakingShareSeconds,
-            totalUserRewards,
-            now
+        totalLocked(),
+        totalUnlocked(),
+        totals.stakingShareSeconds,
+        _totalStakingShareSeconds,
+        totalUserRewards,
+        now
         );
     }
 
@@ -489,8 +489,8 @@ contract TokenGeyser is IStaking, Ownable {
 
         uint256 lockedTokens = totalLocked();
         uint256 mintedLockedShares = (lockedTokens > 0)
-            ? totalLockedShares.mul(amount).div(lockedTokens)
-            : amount.mul(_initialSharesPerToken);
+        ? totalLockedShares.mul(amount).div(lockedTokens)
+        : amount.mul(_initialSharesPerToken);
 
         UnlockSchedule memory schedule;
         schedule.initialLockedShares = mintedLockedShares;
@@ -556,8 +556,8 @@ contract TokenGeyser is IStaking, Ownable {
             schedule.lastUnlockTimestampSec = schedule.endAtSec;
         } else {
             sharesToUnlock = now.sub(schedule.lastUnlockTimestampSec)
-                .mul(schedule.initialLockedShares)
-                .div(schedule.durationSec);
+            .mul(schedule.initialLockedShares)
+            .div(schedule.durationSec);
             schedule.lastUnlockTimestampSec = now;
         }
 
@@ -573,7 +573,7 @@ contract TokenGeyser is IStaking, Ownable {
      * @return Transfer success.
      */
     function rescueFundsFromStakingPool(address tokenToRescue, address to, uint256 amount)
-        public onlyOwner returns (bool) {
+    public onlyOwner returns (bool) {
 
         return _stakingPool.rescueFunds(tokenToRescue, to, amount);
     }
