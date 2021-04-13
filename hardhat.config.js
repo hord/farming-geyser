@@ -53,7 +53,7 @@ module.exports = {
     },
   },
   solidity: {
-    version: '0.5.1',
+    version: '0.6.12',
   },
   paths: {
     sources: "./contracts",
