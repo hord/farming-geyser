@@ -43,6 +43,9 @@ contract Farm is Ownable {
     // ERC20 tokens rewarded per block.
     uint256 public rewardPerBlock;
 
+    // Total rewards added to farm
+    uint256 public totalRewards;
+
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -77,6 +80,9 @@ contract Farm is Ownable {
 
         erc20.safeTransferFrom(address(msg.sender), address(this), _amount);
         endBlock += _amount.div(rewardPerBlock);
+
+        // Increase farm total rewards
+        totalRewards = totalRewards.add(_amount);
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
