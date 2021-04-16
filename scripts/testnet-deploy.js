@@ -15,10 +15,10 @@ async function main() {
   let currentBlock = await web3.eth.getBlockNumber();
   currentBlock += 50;
   console.log('startBlock: ' + currentBlock);
-  const rewardPerBlock = toWeiDenomination(0.7); //1 token per block
+  const rewardPerBlock = ethers.utils.parseEther("1.25"); //1 token per block
 
   const Farm = await hre.ethers.getContractFactory('Farm');
-  const farm = await Farm.deploy(hord_token.address, rewardPerBlock, currentBlock);
+  const farm = await Farm.deploy(contracts["hord_token"].address, rewardPerBlock, currentBlock);
   await farm.deployed();
   console.log('Farm deployed with address: ', farm.address);
   saveContractAddress(hre.network.name, 'farm', farm.address, (await hre.artifacts.readArtifact("Farm")).abi);

@@ -1,13 +1,13 @@
 {
     "ropsten": {
         "lp_token": {
-            "address": "0x6852Cc34A704B4B61BCd104bff9569DD187dd34c"
+            "address": "0x25efe69869f2484033afa58dac49304da796cee2"
         },
         "hord_token": {
-            "address": "0x783074982fd2301989d32AD837098335e1DF3BEA"
+            "address": "0xF0f8D089136c88D99EAB8De4e84cae347B52AA63"
         },
         "farm": {
-            "address": "0x9FE09bBaa26A79b5e23F96Fa99b16ACcdF0A8d4e",
+            "address": "0x8E1ff44eB3A1AC1CbaFcD2AEEc85068dC91d2564",
             "abi": [
                 {
                     "inputs": [
@@ -417,6 +417,19 @@
                 {
                     "inputs": [],
                     "name": "totalPending",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "totalRewards",
                     "outputs": [
                         {
                             "internalType": "uint256",
