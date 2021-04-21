@@ -1,7 +1,7 @@
 {
     "ropsten": {
-        "lp_token": "0x25efe69869f2484033afa58dac49304da796cee2",
-        "hord_token": "0xF0f8D089136c88D99EAB8De4e84cae347B52AA63",
-        "farm": "0x8E1ff44eB3A1AC1CbaFcD2AEEc85068dC91d2564"
+        "LpToken": "0x25efe69869f2484033afa58dac49304da796cee2",
+        "HordToken": "0xF0f8D089136c88D99EAB8De4e84cae347B52AA63",
+        "Farm": "0x8E1ff44eB3A1AC1CbaFcD2AEEc85068dC91d2564"
     }
 }
