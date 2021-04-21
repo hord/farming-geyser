@@ -16,9 +16,9 @@ task('accounts', 'Prints the list of accounts', async () => {
 })
 
 const branchToSlug = {
-  "develop" : "hord-test",
-  "staging" : "hord-staging",
-  "master" : "hord-prod",
+  "develop" : "hord-farm-test",
+  "staging" : "hord-farm-staging",
+  "master" : "hord-farm-prod",
 }
 
 const generateTenderlySlug = () => {
