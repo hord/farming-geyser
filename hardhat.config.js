@@ -3,19 +3,29 @@ require('@nomiclabs/hardhat-ethers')
 require("@nomiclabs/hardhat-web3")
 require('@openzeppelin/hardhat-upgrades')
 require("@tenderly/hardhat-tenderly");
-
 require('dotenv').config();
+const branch = require('git-branch');
 
 
-// This is a sample Buidler task. To learn how to create your own go to
-// https://buidler.dev/guides/create-task.html
+
 task('accounts', 'Prints the list of accounts', async () => {
   const accounts = await ethers.getSigners()
-
   for (const account of accounts) {
     console.log(await account.getAddress())
   }
 })
+
+const branchToSlug = {
+  "develop" : "hord-test",
+  "staging" : "hord-staging",
+  "master" : "hord-prod",
+}
+
+const generateTenderlySlug = () => {
+  let gitBranch = branch.sync();
+  console.log(branchToSlug[gitBranch]);
+  return branchToSlug[gitBranch];
+}
 
 // You have to export an object to set up your config
 // This object can have the following optional entries:
@@ -55,7 +65,6 @@ module.exports = {
   solidity: {
     version: '0.6.12',
   },
-
   paths: {
     sources: "./contracts",
     tests: "./test",
@@ -64,6 +73,6 @@ module.exports = {
   },
   tenderly: {
     username: process.env.USERNAME,
-    project: process.env.PROJECT
+    project: generateTenderlySlug()
   },
 }
