@@ -3,11 +3,6 @@ const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 const { ethers, web3, upgrades } = hre
 const BigNumber = ethers.BigNumber
 
-const decimals = "1000000000000000000"
-function toWeiDenomination (x) {
-  return BigNumber.from(x).mul(decimals).toString()
-}
-
 async function main() {
 
   const contracts = getSavedContractAddresses()[hre.network.name];

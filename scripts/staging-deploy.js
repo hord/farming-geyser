@@ -1,24 +1,24 @@
 const hre = require("hardhat");
 const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 const { ethers, web3, upgrades } = hre
-
+const BigNumber = ethers.BigNumber
 
 async function main() {
 
   const contracts = getSavedContractAddresses()[hre.network.name];
 
   let currentBlock = await web3.eth.getBlockNumber();
-  currentBlock += 50;
+  currentBlock += 100;
   console.log('startBlock: ' + currentBlock);
-  const rewardPerBlock = ethers.utils.parseEther("3.79"); //3.79 tokens per block
+  const rewardPerBlock = ethers.utils.parseEther("1.25"); //1 token per block
 
   const Farm = await hre.ethers.getContractFactory('Farm');
-  const farm = await Farm.deploy(contracts["hord_token"].address, rewardPerBlock, currentBlock);
+  const farm = await Farm.deploy(contracts["HordToken"], rewardPerBlock, currentBlock);
   await farm.deployed();
   console.log('Farm deployed with address: ', farm.address);
-  saveContractAddress(hre.network.name, 'farm', farm.address, (await hre.artifacts.readArtifact("Farm")).abi);
+  saveContractAddress(hre.network.name, 'Farm', farm.address);
 
-  await farm.add(100, contracts["lp_token"].address, true);
+  await farm.add(100, contracts["LpToken"], true);
 
   // let totalRewards = toWeiDenomination(100800)// 10 days approximately
   // await hord_token.approve(farm.address, totalRewards);
@@ -31,8 +31,8 @@ async function main() {
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+    .then(() => process.exit(0))
+    .catch(error => {
+      console.error(error);
+      process.exit(1);
+    });
