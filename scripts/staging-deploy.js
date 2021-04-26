@@ -10,7 +10,7 @@ async function main() {
   let currentBlock = await web3.eth.getBlockNumber();
   currentBlock += 100;
   console.log('startBlock: ' + currentBlock);
-  const rewardPerBlock = ethers.utils.parseEther("1.25"); //1 token per block
+  const rewardPerBlock = ethers.utils.parseEther("3.79"); //1 token per block
 
   const Farm = await hre.ethers.getContractFactory('Farm');
   const farm = await Farm.deploy(contracts["HordToken"], rewardPerBlock, currentBlock);
