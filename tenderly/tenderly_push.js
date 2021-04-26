@@ -15,6 +15,8 @@ const toCamel = (s) => {
 const checksumNetworkAndBranch = (network, branch) => {
     if(network === 'ropsten') {
         assert.strictEqual(branch ,'develop','Wrong branch');
+    } else if(network === 'ropstenStaging') {
+        assert.strictEqual(branch ,'staging','Wrong branch');
     } else if(network === 'mainnet') {
         assert.strictEqual(branch ,'master','Wrong branch');
     }

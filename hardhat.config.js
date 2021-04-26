@@ -42,6 +42,14 @@ module.exports = {
       gasPrice: 40000000000,
       timeout: 50000
     },
+    ropstenStaging: {
+      // Infura public nodes
+      url: 'https://ropsten.infura.io/v3/34ee2e319e7945caa976d4d1e24db07f',
+      accounts: [process.env.PK],
+      chainId: 3,
+      gasPrice: 40000000000,
+      timeout: 50000
+    },
     kovan: {
       // Infura public nodes
       url: 'https://kovan.infura.io/v3/8632b09b72044f2c9b9ca1f621220e72',
