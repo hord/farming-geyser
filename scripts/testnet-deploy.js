@@ -1,7 +1,6 @@
 const hre = require("hardhat");
 const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 const { ethers, web3, upgrades } = hre
-const BigNumber = ethers.BigNumber
 
 async function main() {
 
