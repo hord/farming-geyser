@@ -89,7 +89,7 @@ contract Farm is Ownable {
 
     // Add a new lp to the pool. Can only be called by the owner.
     // DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function add(uint256 _allocPoint, IERC20 _lpToken, bool _withUpdate) external onlyOwner {
+    function addPool(uint256 _allocPoint, IERC20 _lpToken, bool _withUpdate) external onlyOwner {
         require(isLPTokenAdded[address(_lpToken)] == false, "Add: LP Token is already added");
         isLPTokenAdded[address(_lpToken)] = true; // Mark that token is added
 

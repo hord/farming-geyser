@@ -18,7 +18,7 @@ async function main() {
   console.log('Farm deployed with address: ', farm.address);
   saveContractAddress(hre.network.name, 'Farm', farm.address);
 
-  await farm.add(100, contracts["LpToken"], true);
+  await farm.addPool(100, contracts["LpToken"], true);
 
   // let totalRewards = toWeiDenomination(100800)// 10 days approximately
   // await hord_token.approve(farm.address, totalRewards);
