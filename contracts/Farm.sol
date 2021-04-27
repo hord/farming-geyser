@@ -45,6 +45,9 @@ contract Farm is Ownable {
     // Total rewards added to farm
     uint256 public totalRewards;
 
+    // Mapping to determine if LP token is added
+    mapping (address => bool) public isLPTokenAdded;
+
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -87,16 +90,20 @@ contract Farm is Ownable {
     // Add a new lp to the pool. Can only be called by the owner.
     // DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function add(uint256 _allocPoint, IERC20 _lpToken, bool _withUpdate) external onlyOwner {
+        require(isLPTokenAdded[address(_lpToken)] == false, "Add: LP Token is already added");
+        isLPTokenAdded[address(_lpToken)] = true; // Mark that token is added
+
         if (_withUpdate) {
             massUpdatePools();
         }
+
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
         poolInfo.push(PoolInfo({
-        lpToken: _lpToken,
-        allocPoint: _allocPoint,
-        lastRewardBlock: lastRewardBlock,
-        accERC20PerShare: 0
+            lpToken: _lpToken,
+            allocPoint: _allocPoint,
+            lastRewardBlock: lastRewardBlock,
+            accERC20PerShare: 0
         }));
     }
 
