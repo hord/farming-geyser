@@ -25,6 +25,21 @@ describe("Tokens Farm Test", function () {
         tokenInstance.connect(owner).approve(farmInstance.address, 10000);
     });
 
+    describe("Check if constructor values are set properly", function () {
+        it("Token address", async function () {
+            expect(await farmInstance.erc20()).to.equal(tokenInstance.address);
+        });
+        it("Reward per block", async function () {
+            expect(await farmInstance.rewardPerBlock()).to.equal(rewardPerBlock);
+        });
+        it("Start block", async function () {
+            expect(await farmInstance.startBlock()).to.equal(blockTimeInSeconds);
+        });
+        it("End block", async function () {
+            expect(await farmInstance.endBlock()).to.equal(blockTimeInSeconds);
+        });
+    });
+
     it("Should check pool length is equal to zero", async function () {
         expect(await farmInstance.poolLength()).to.equal(0);
     });
@@ -34,7 +49,7 @@ describe("Tokens Farm Test", function () {
             let oldTotalRewards = farmInstance.totalRewards();
             advanceBlocks(bonusTime);
             await farmInstance.connect(owner).fund(amountForTest);
-            expect(farmInstance.totalRewards()).to.equal(oldTotalRewards + amountForTest)
+            expect(await farmInstance.totalRewards()).to.equal(oldTotalRewards + amountForTest);
         });
     });
 
@@ -63,13 +78,12 @@ describe("Tokens Farm Test", function () {
 
     describe("Deposited function", function () {
         it("Deposited function should be executed properly", async function () {
-            await farmInstance.connect(user1).deposited(5, owner.address);
+            await farmInstance.deposited(1, owner.address);
         });
     });
 
-
     it("Pending function", async function () {
-
+        await farmInstance.pending(1, user1.address);
     });
 
     it("Should return total pending rewards", async function () {
@@ -77,7 +91,7 @@ describe("Tokens Farm Test", function () {
     });
 
     it("Deposit function", async function () {
-
+        await farmInstance.connect(owner).deposit(1, 50);
     });
 
     it("Withdraw function", async function () {
