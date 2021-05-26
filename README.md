@@ -28,8 +28,8 @@ USERNAME=2key
 - `rm -r .openzeppelin`
 - `rm -r cache`
 - `rm -r artifacts`
-- `npx hardhat run --network ropsten scripts/testnet_deploy.js`
-- `npx hardhat run --network ropsten scripts/staging_deploy.js`
+- `npx hardhat run --network ropsten scripts/deploy.js`
+- `npx hardhat run --network mainnet scripts/deploy.js`
 
 #### Tenderly push
 - Generate tenderly access key on the https://dashboard.tenderly.co
