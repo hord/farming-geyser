@@ -18,8 +18,8 @@ async function main() {
 
     await farm.addPool(100, contracts["LpToken"], true);
 
-    let totalRewards = toWeiDenomination(100800)// 10 days approximately
-    const rewardsToken = ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
+    let totalRewards = ethers.utils.parseEther("100800")// 10 days approximately
+    const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
     await rewardsToken.approve(farm.address, totalRewards);
     console.log('Approved rewards token');
 
