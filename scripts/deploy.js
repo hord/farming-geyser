@@ -16,14 +16,14 @@ async function main() {
 
     await farm.addPool(100, contracts["LpToken"], true);
 
-    // let totalRewards = ethers.utils.parseEther("400000");
-    // const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
-    // await rewardsToken.approve(contracts['Farm'], totalRewards);
-    // console.log('Approved rewards token');
-    //
-    // console.log('Create new farming pool for hord lp token');
-    // await farm.fund(totalRewards);
-    // console.log('Farm funded properly.');
+    let totalRewards = ethers.utils.parseEther("400000");
+    const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
+    await rewardsToken.approve(contracts['Farm'], totalRewards);
+    console.log('Approved rewards token');
+
+    console.log('Create new farming pool for hord lp token');
+    await farm.fund(totalRewards);
+    console.log('Farm funded properly.');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
