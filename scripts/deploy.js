@@ -5,7 +5,7 @@ const { ethers, web3, upgrades } = hre
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
-    const startBlock = 12542375; // 2 pm UTC 31st May 2021
+    const startBlock = 12587488; // 2 pm UTC 7th June 2021
     const rewardPerBlock = ethers.utils.parseEther("1.003087"); // 1.003087 token per block
 
     const Farm = await hre.ethers.getContractFactory('Farm');
@@ -16,14 +16,14 @@ async function main() {
 
     await farm.addPool(100, contracts["LpToken"], true);
 
-    let totalRewards = ethers.utils.parseEther("400000");
-    const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
-    await rewardsToken.approve(contracts['Farm'], totalRewards);
-    console.log('Approved rewards token');
-
-    console.log('Create new farming pool for hord lp token');
-    await farm.fund(totalRewards);
-    console.log('Farm funded properly.');
+    // let totalRewards = ethers.utils.parseEther("400000");
+    // const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
+    // await rewardsToken.approve(contracts['Farm'], totalRewards);
+    // console.log('Approved rewards token');
+    //
+    // console.log('Create new farming pool for hord lp token');
+    // await farm.fund(totalRewards);
+    // console.log('Farm funded properly.');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
