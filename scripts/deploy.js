@@ -14,15 +14,16 @@ async function main() {
     console.log('Farm deployed with address: ', farm.address);
     saveContractAddress(hre.network.name, 'Farm', farm.address);
 
-    // await farm.addPool(100, contracts["LpToken"], true);
-    //
-    // let totalRewards = ethers.utils.parseEther("100800")// 10 days approximately
-    // const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
-    // await rewardsToken.approve(farm.address, totalRewards);
-    // console.log('Approved rewards token');
-    //
-    // console.log('Create new farming pool for hord lp token');
-    // await farm.fund(totalRewards);
+    await farm.addPool(100, contracts["LpToken"], true);
+
+    let totalRewards = ethers.utils.parseEther("400000");
+    const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
+    await rewardsToken.approve(contracts['Farm'], totalRewards);
+    console.log('Approved rewards token');
+
+    console.log('Create new farming pool for hord lp token');
+    await farm.fund(totalRewards);
+    console.log('Farm funded properly.');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
