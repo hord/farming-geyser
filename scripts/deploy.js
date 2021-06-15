@@ -5,8 +5,9 @@ const { ethers, web3, upgrades } = hre
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
+    //TODO: Update only start block
     const startBlock = 12587488; // 2 pm UTC 7th June 2021
-    const rewardPerBlock = ethers.utils.parseEther("1.003087"); // 1.003087 token per block
+    const rewardPerBlock = ethers.utils.parseEther("0.52084"); // 0.52084 token per block
 
     const Farm = await hre.ethers.getContractFactory('Farm');
     const farm = await Farm.deploy(contracts["RewardsToken"], rewardPerBlock, startBlock);
@@ -16,7 +17,7 @@ async function main() {
 
     await farm.addPool(100, contracts["LpToken"], true);
 
-    let totalRewards = ethers.utils.parseEther("400000");
+    let totalRewards = ethers.utils.parseEther("200000");
     const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
     await rewardsToken.approve(contracts['Farm'], totalRewards);
     console.log('Approved rewards token');
