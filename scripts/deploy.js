@@ -5,13 +5,13 @@ const { ethers, web3, upgrades } = hre
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
-    //TODO: Update only start block
-    const startBlock = 12587488; // 2 pm UTC 7th June 2021
-    const rewardPerBlock = ethers.utils.parseEther("0.52084"); // 0.52084 token per block
+    const startBlock = 12645600; // 2 pm UTC 7th June 2021
+    const rewardPerBlock = ethers.utils.parseEther("0.2344"); // 0.2344 token per block
 
     const Farm = await hre.ethers.getContractFactory('Farm');
     const farm = await Farm.deploy(contracts["RewardsToken"], rewardPerBlock, startBlock);
     await farm.deployed();
+
     console.log('Farm deployed with address: ', farm.address);
     saveContractAddress(hre.network.name, 'Farm', farm.address);
 
@@ -22,9 +22,9 @@ async function main() {
     await rewardsToken.approve(contracts['Farm'], totalRewards);
     console.log('Approved rewards token');
 
-    console.log('Create new farming pool for hord lp token');
-    await farm.fund(totalRewards);
-    console.log('Farm funded properly.');
+    // console.log('Create new farming pool for hord lp token');
+    // await farm.fund(totalRewards);
+    // console.log('Farm funded properly.');
 }
 
 // We recommend this pattern to be able to use async/await everywhere
