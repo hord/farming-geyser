@@ -13,8 +13,7 @@ async function main() {
     const startBlock = 12658390;
     const tokenDecimals = await rewardsToken.decimals();
     const rewardPerBlock = ethers.utils.parseUnits("0.2344", tokenDecimals.toString()); // 0.2344 token per block
-    const totalRewards = ethers.utils.parseUnits("90000", tokenDecimals.toString());
-
+    const totalRewards = ethers.utils.parseUnits("1000", tokenDecimals.toString());
 
     // Deploy Farm contract
     const Farm = await hre.ethers.getContractFactory('Farm');
