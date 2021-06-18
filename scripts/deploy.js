@@ -10,10 +10,10 @@ async function main() {
 
 
     // Compute contract parameters
-    const startBlock = 12645600; // 2 pm UTC 7th June 2021
+    const startBlock = 12658390;
     const tokenDecimals = await rewardsToken.decimals();
     const rewardPerBlock = ethers.utils.parseUnits("0.2344", tokenDecimals.toString()); // 0.2344 token per block
-    const totalRewards = ethers.utils.parseUnits("200000", tokenDecimals.toString());
+    const totalRewards = ethers.utils.parseUnits("90000", tokenDecimals.toString());
 
 
     // Deploy Farm contract
