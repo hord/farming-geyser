@@ -1,12 +1,13 @@
-const hre = require("hardhat");
+const hre = require("hardhat")
 const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 const { ethers, web3, upgrades } = hre
 
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
-    const startBlock = 10493300; // 12am 23rd June 2021
-    const rewardPerBlock = ethers.utils.parseEther("1.003087"); // 1.003087 token per block
+    // Kovan has 4 seconds time per block
+    const startBlock = 25712537; // 6pm 25rd June 2021
+    const rewardPerBlock = ethers.utils.parseEther("0.462962"); // 0.46 tokens per block
 
     const Farm = await hre.ethers.getContractFactory('Farm');
     const farm = await Farm.deploy(contracts["RewardsToken"], rewardPerBlock, startBlock);
@@ -14,11 +15,11 @@ async function main() {
     console.log('Farm deployed with address: ', farm.address);
     saveContractAddress(hre.network.name, 'Farm', farm.address);
 
-    await farm.addPool(100, contracts["LpToken"], true);
-
     //const farm = await hre.ethers.getContractAt("Farm", contracts["Farm"]);
 
-    let totalRewards = ethers.utils.parseEther("900000");
+    await farm.addPool(100, contracts["LpToken"], true);
+
+    let totalRewards = ethers.utils.parseEther("1000000");
     const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
     await rewardsToken.approve(contracts['Farm'], totalRewards);
     console.log('Approved rewards token');

@@ -1,8 +1,13 @@
 {
+    "kovan": {
+        "LpToken": "0x258901e565bb3fdd9f5335b124edc5c38ee3bc4c",
+        "RewardsToken": "0xfec11415f81e056a8c7af1c365df7f91565f694a",
+        "Farm": "0xda11FDEF15Df1D4Ee2fC1CeF1C9B8058948c25DE"
+    },
     "ropsten": {
-        "LpToken": "0x78D377CC3DCd451829d3C887250dE2340E32Aab8",
-        "RewardsToken": "0xeA9CFf03b0DbC2fd9577FdB6E425D2A453916144",
-        "Farm": "0x88DF6aFa1d3916a71BCE58Aa06E72D33EB23FB88"
+        "LpToken": "0x258901e565bb3fdd9f5335b124edc5c38ee3bc4c",
+        "RewardsToken": "0xfec11415f81e056a8c7af1c365df7f91565f694a",
+        "Farm": "0x3D8d924337F494e1C9bF177D6DAD01ed4A1F93ea"
     },
     "mainnet": {
         "LpToken": "0xe53533f78787c63735c77c9e2f9c60081b942cdb",
