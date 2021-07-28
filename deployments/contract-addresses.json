@@ -1,12 +1,7 @@
 {
-    "ropsten": {
-        "LpToken": "0x362e0db9244f66fb68382f5638f270f7ee2ca258",
-        "RewardsToken": "0xf3b472ac81bad92a6da5e6ee7fea32eb68ee764d",
-        "Farm": "0x0E39365942c643BAc9B4d58EF607d805740d1230"
-    },
     "mainnet": {
-        "LpToken": "0xf6887ad6f3b342840dbea138e8003f2ca14f4500",
-        "RewardsToken": "0x8B3870Df408fF4D7C3A26DF852D41034eDa11d81",
-        "Farm": "0xaBc172d4c9f701e80195149257BCaA3E319CF335"
+        "LpToken": "0xde6faedbcae38eec6d33ad61473a04a6dd7f6e28",
+        "RewardsToken": "0x43a96962254855f16b925556f9e97be436a43448",
+        "Farm": "0x76Fec984cD5Cf860916a182899B878ff24bDEdd4"
     }
 }
