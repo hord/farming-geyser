@@ -6,7 +6,7 @@ async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
     const farm = await hre.ethers.getContractAt('Farm', contracts['Farm']);
 
-    // Hardcode chainport congress address
+    // Hardcode chainport congress address https://etherscan.io/address/0xB6b4C7aC240b1f176c5589d064733066a83884a1
     const chainportCongress = "0xB6b4C7aC240b1f176c5589d064733066a83884a1";
     // Get current farm owner
     const currentOwner = await farm.owner();
