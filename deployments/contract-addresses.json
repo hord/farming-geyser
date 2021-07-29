@@ -1,6 +1,7 @@
 {
     "mainnet": {
         "LpToken": "0xe53533f78787c63735c77c9e2f9c60081b942cdb",
-        "RewardsToken": "0x88a9a52f944315d5b4e917b9689e65445c401e83"
+        "RewardsToken": "0x88a9a52f944315d5b4e917b9689e65445c401e83",
+        "Farm": "0xf6736cB10534460A339a115196AF3C4F99BAd4ED"
     }
 }

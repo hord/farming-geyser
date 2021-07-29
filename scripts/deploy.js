@@ -18,11 +18,11 @@ async function main() {
 
     let totalRewards = ethers.utils.parseEther("1000");
     const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
-    const res = await rewardsToken.approve(contracts['Farm'], totalRewards);
+    await rewardsToken.approve(contracts['Farm'], totalRewards);
     console.log('Approved rewards token');
 
     console.log('Create new farming pool for hord lp token');
-    const res1 = await farm.fund(totalRewards);
+    await farm.fund(totalRewards);
     console.log('Farm funded properly.');
 }
 
