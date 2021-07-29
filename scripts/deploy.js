@@ -5,8 +5,8 @@ const { ethers, web3, upgrades } = hre
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
-    const startBlock = 12542375; // 2 pm UTC 31st May 2021
-    const rewardPerBlock = ethers.utils.parseEther("1.003087"); // 1.003087 token per block
+    const startBlock = 12920581;
+    const rewardPerBlock = ethers.utils.parseEther("0.312");
 
     const Farm = await hre.ethers.getContractFactory('Farm');
     const farm = await Farm.deploy(contracts["RewardsToken"], rewardPerBlock, startBlock);
@@ -16,13 +16,13 @@ async function main() {
 
     await farm.addPool(100, contracts["LpToken"], true);
 
-    let totalRewards = ethers.utils.parseEther("400000");
+    let totalRewards = ethers.utils.parseEther("1000");
     const rewardsToken = await hre.ethers.getContractAt("ERC20Mock", contracts["RewardsToken"]);
-    await rewardsToken.approve(contracts['Farm'], totalRewards);
+    const res = await rewardsToken.approve(contracts['Farm'], totalRewards);
     console.log('Approved rewards token');
 
     console.log('Create new farming pool for hord lp token');
-    await farm.fund(totalRewards);
+    const res1 = await farm.fund(totalRewards);
     console.log('Farm funded properly.');
 }
 
