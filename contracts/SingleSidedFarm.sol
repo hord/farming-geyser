@@ -51,6 +51,8 @@ contract SingleSidedFarm is Ownable {
     uint256 public startBlock;
     // The block number when farming ends.
     uint256 public endBlock;
+    // Early withdraw penalty
+    EarlyWithdrawPenalty public penalty;
 
     // Events
     event Deposit(address indexed user, uint256 amount);
@@ -73,6 +75,11 @@ contract SingleSidedFarm is Ownable {
         isEarlyWithdrawAllowed = _isEarlyWithdrawAllowed;
     }
 
+    // Set early withdrawal penalty, if applicable
+    function setEarlyWithdrawPenalty(EarlyWithdrawPenalty _penalty) external onlyOwner {
+        require(isEarlyWithdrawAllowed, "Early withdrawal is not allowed, so there is no penalty.");
+        penalty = _penalty;
+    }
 
     // Fund the farm, increase the end block
     function fund(uint256 _amount) external {
