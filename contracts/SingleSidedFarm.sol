@@ -7,25 +7,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract SingleSidedFarm is Ownable {
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    enum Penalty { BURN_TOKENS, REDISTRIBUTE_TOKENS }
+
     // Info of each user.
     struct UserInfo {
-        uint256 amount;             // How many LP tokens the user has provided.
+        uint256 amount;             // How many tokens the user has provided.
         uint256 rewardDebt;         // Reward debt. See explanation below.
-        uint256 lastDepositBlock;   // Time when user deposited last time.
+        uint256 depositTime;        // Time when user deposited.
     }
 
     // Info of each pool.
     struct PoolInfo {
-        IERC20 lpToken;             // Address of LP token contract.
+        IERC20 tokenStaked;             // Address of LP token contract.
         uint256 allocPoint;         // How many allocation points assigned to this pool. ERC20s to distribute per block.
         uint256 lastRewardBlock;    // Last block number that ERC20s distribution occurs.
         uint256 accERC20PerShare;   // Accumulated ERC20s per share, times 1e36.
         uint256 totalDeposits;      // Total tokens deposited in the farm.
     }
-
 
     // Minimal period of time to stake
     uint256 public minTimeToStake;
@@ -38,7 +40,7 @@ contract SingleSidedFarm is Ownable {
     // Total rewards added to farm
     uint256 public totalRewards;
     // Mapping to determine if LP token is added
-    mapping (address => bool) public isLPTokenAdded;
+    mapping (address => bool) public isTokenAdded;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -81,22 +83,27 @@ contract SingleSidedFarm is Ownable {
 
     // Add a new lp to the pool. Can only be called by the owner.
     // DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function addPool(uint256 _allocPoint, IERC20 _lpToken, bool _withUpdate) external onlyOwner {
-        require(isLPTokenAdded[address(_lpToken)] == false, "Add: LP Token is already added");
-        isLPTokenAdded[address(_lpToken)] = true; // Mark that token is added
+    function addPool(uint256 _allocPoint, IERC20 _tokenStaked, bool _withUpdate) external onlyOwner {
+        require(isTokenAdded[address(_tokenStaked)] == false, "Add: Token is already added.");
+        isTokenAdded[address(_tokenStaked)] = true;
 
         if (_withUpdate) {
             massUpdatePools();
         }
 
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
+
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
-        poolInfo.push(PoolInfo({
-        lpToken: _lpToken,
-        allocPoint: _allocPoint,
-        lastRewardBlock: lastRewardBlock,
-        accERC20PerShare: 0
-        }));
+
+        poolInfo.push(
+            PoolInfo({
+                tokenStaked: _tokenStaked,
+                allocPoint: _allocPoint,
+                lastRewardBlock: lastRewardBlock,
+                accERC20PerShare: 0,
+                totalDeposits: 0
+            })
+        );
     }
 
     // Update the given pool's ERC20 allocation point. Can only be called by the owner.
@@ -118,12 +125,14 @@ contract SingleSidedFarm is Ownable {
     function pending(uint256 _pid, address _user) external view returns (uint256) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
-        uint256 accERC20PerShare = pool.accERC20PerShare;
-        uint256 lpSupply = pool.lpToken.balanceOf(address(this));
 
-        if (block.number > pool.lastRewardBlock && lpSupply != 0) {
+        uint256 accERC20PerShare = pool.accERC20PerShare;
+        uint256 tokenSupply = pool.totalDeposits;
+
+        if (block.number > pool.lastRewardBlock && tokenSupply != 0) {
             uint256 lastBlock = block.number < endBlock ? block.number : endBlock;
-            uint256 nrOfBlocks = lastBlock.sub(pool.lastRewardBlock);
+            uint256 blockToCompare = pool.lastRewardBlock < endBlock ? pool.lastRewardBlock : endBlock;
+            uint256 nrOfBlocks = lastBlock.sub(blockToCompare);
             uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
             accERC20PerShare = accERC20PerShare.add(erc20Reward.mul(1e36).div(lpSupply));
         }
@@ -157,8 +166,10 @@ contract SingleSidedFarm is Ownable {
         if (lastBlock <= pool.lastRewardBlock) {
             return;
         }
-        uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-        if (lpSupply == 0) {
+
+        uint256 tokenSupply = pool.totalDeposits;
+
+        if (tokenSupply == 0) {
             pool.lastRewardBlock = lastBlock;
             return;
         }
@@ -166,7 +177,7 @@ contract SingleSidedFarm is Ownable {
         uint256 nrOfBlocks = lastBlock.sub(pool.lastRewardBlock);
         uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
 
-        pool.accERC20PerShare = pool.accERC20PerShare.add(erc20Reward.mul(1e36).div(lpSupply));
+        pool.accERC20PerShare = pool.accERC20PerShare.add(erc20Reward.mul(1e36).div(tokenSupply));
         pool.lastRewardBlock = block.number;
     }
 
@@ -174,14 +185,26 @@ contract SingleSidedFarm is Ownable {
     function deposit(uint256 _pid, uint256 _amount) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+
+        // Update pool
         updatePool(_pid);
+
         if (user.amount > 0) {
             uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
             erc20Transfer(msg.sender, pendingAmount);
         }
-        pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+
+        // Take token and transfer to contract
+        pool.tokenStaked.safeTransferFrom(address(msg.sender), address(this), _amount);
+        // Add amount to the pool total deposits
+        pool.totalDeposits = pool.totalDeposits.add(_amount);
+
+        // Update user accounting
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accERC20PerShare).div(1e36);
+        user.depositTime = block.timestamp;
+
+        // Emit deposit event
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -189,13 +212,20 @@ contract SingleSidedFarm is Ownable {
     function withdraw(uint256 _pid, uint256 _amount) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+
         require(user.amount >= _amount, "withdraw: can't withdraw more than deposit");
         updatePool(_pid);
+
         uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
         erc20Transfer(msg.sender, pendingAmount);
+
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accERC20PerShare).div(1e36);
-        pool.lpToken.safeTransfer(address(msg.sender), _amount);
+
+        pool.tokenStaked.safeTransfer(address(msg.sender), _amount);
+        pool.totalDeposits = pool.totalDeposits.sub(_amount);
+
+        // Emit Withdraw event
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
@@ -203,8 +233,12 @@ contract SingleSidedFarm is Ownable {
     function emergencyWithdraw(uint256 _pid) external {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        pool.lpToken.safeTransfer(address(msg.sender), user.amount);
+
+        pool.tokenStaked.safeTransfer(address(msg.sender), user.amount);
+        pool.totalDeposits = pool.totalDeposits.sub(user.amount);
+
         emit EmergencyWithdraw(msg.sender, _pid, user.amount);
+
         user.amount = 0;
         user.rewardDebt = 0;
     }
