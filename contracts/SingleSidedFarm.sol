@@ -12,7 +12,7 @@ contract SingleSidedFarm is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    enum Penalty { BURN_TOKENS, REDISTRIBUTE_TOKENS }
+    enum EarlyWithdrawPenalty { BURN_REWARDS, REDISTRIBUTE_REWARDS }
 
     // Info of each user.
     struct UserInfo {
@@ -24,12 +24,13 @@ contract SingleSidedFarm is Ownable {
     // Info of each pool.
     struct PoolInfo {
         IERC20 tokenStaked;             // Address of LP token contract.
-        uint256 allocPoint;         // How many allocation points assigned to this pool. ERC20s to distribute per block.
         uint256 lastRewardBlock;    // Last block number that ERC20s distribution occurs.
         uint256 accERC20PerShare;   // Accumulated ERC20s per share, times 1e36.
         uint256 totalDeposits;      // Total tokens deposited in the farm.
     }
 
+    // If contractor allows early withdraw on stakes
+    bool public isEarlyWithdrawAllowed;
     // Minimal period of time to stake
     uint256 public minTimeToStake;
     // Address of the ERC20 Token contract.
@@ -42,90 +43,76 @@ contract SingleSidedFarm is Ownable {
     uint256 public totalRewards;
     // Mapping to determine if LP token is added
     mapping (address => bool) public isTokenAdded;
-
     // Info of each pool.
-    PoolInfo[] public poolInfo;
+    PoolInfo public pool;
     // Info of each user that stakes LP tokens.
-    mapping (uint256 => mapping (address => UserInfo)) public userInfo;
-    // Total allocation points. Must be the sum of all allocation points in all pools.
-    uint256 public totalAllocPoint;
-
+    mapping (address => UserInfo) public userInfo;
     // The block number when farming starts.
     uint256 public startBlock;
     // The block number when farming ends.
     uint256 public endBlock;
 
-    event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
-    event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
-    event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
+    // Events
+    event Deposit(address indexed user, uint256 amount);
+    event Withdraw(address indexed user, uint256 amount);
+    event EmergencyWithdraw(address indexed user, uint256 amount);
 
-    constructor(IERC20 _erc20, uint256 _rewardPerBlock, uint256 _startBlock) public {
+
+    constructor(
+        IERC20 _erc20, uint256 _rewardPerBlock, uint256 _startBlock, uint256 _minTimeToStake, bool _isEarlyWithdrawAllowed
+    ) public {
+        require(address(_erc20) != address(0x0), "Wrong token address.");
+        require(_rewardPerBlock > 0, "Rewards per block must be > 0.");
+        require(startBlock >= block.timestamp, "Start block can not be in the past.");
+
         erc20 = _erc20;
         rewardPerBlock = _rewardPerBlock;
         startBlock = _startBlock;
         endBlock = _startBlock;
+        minTimeToStake = _minTimeToStake;
+        isEarlyWithdrawAllowed = _isEarlyWithdrawAllowed;
     }
 
-    // Number of LP pools
-    function poolLength() external view returns (uint256) {
-        return poolInfo.length;
-    }
 
     // Fund the farm, increase the end block
     function fund(uint256 _amount) external {
         require(block.number < endBlock, "fund: too late, the farm is closed");
+        require(_amount > 0, "Amount must be greater than 0.");
 
         erc20.safeTransferFrom(address(msg.sender), address(this), _amount);
         endBlock += _amount.div(rewardPerBlock);
-
         // Increase farm total rewards
         totalRewards = totalRewards.add(_amount);
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
-    // DO NOT add the same LP token more than once. Rewards will be messed up if you do.
-    function addPool(uint256 _allocPoint, IERC20 _tokenStaked, bool _withUpdate) external onlyOwner {
-        require(isTokenAdded[address(_tokenStaked)] == false, "Add: Token is already added.");
-        isTokenAdded[address(_tokenStaked)] = true;
+    function addPool(IERC20 _tokenStaked, bool _withUpdate) external onlyOwner {
+        require(address(_tokenStaked) != address(0x0), "Must input valid address.");
+        require(address(pool.tokenStaked) == address(0x0), "Pool can be set only once.");
 
         if (_withUpdate) {
             massUpdatePools();
         }
-
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
 
-        totalAllocPoint = totalAllocPoint.add(_allocPoint);
-
-        poolInfo.push(
-            PoolInfo({
-                tokenStaked: _tokenStaked,
-                allocPoint: _allocPoint,
-                lastRewardBlock: lastRewardBlock,
-                accERC20PerShare: 0,
-                totalDeposits: 0
-            })
-        );
-    }
-
-    // Update the given pool's ERC20 allocation point. Can only be called by the owner.
-    function set(uint256 _pid, uint256 _allocPoint, bool _withUpdate) external onlyOwner {
-        if (_withUpdate) {
-            massUpdatePools();
-        }
-        totalAllocPoint = totalAllocPoint.sub(poolInfo[_pid].allocPoint).add(_allocPoint);
-        poolInfo[_pid].allocPoint = _allocPoint;
+        pool = PoolInfo({
+            tokenStaked: _tokenStaked,
+            lastRewardBlock: lastRewardBlock,
+            accERC20PerShare: 0,
+            totalDeposits: 0
+        });
     }
 
     // View function to see deposited LP for a user.
-    function deposited(uint256 _pid, address _user) external view returns (uint256) {
-        UserInfo storage user = userInfo[_pid][_user];
+    function deposited(address _user) external view returns (uint256) {
+        UserInfo storage user = userInfo[_user];
         return user.amount;
     }
 
+
     // View function to see pending ERC20s for a user.
-    function pending(uint256 _pid, address _user) external view returns (uint256) {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][_user];
+    function pending(address _user) external view returns (uint256) {
+        UserInfo storage user = userInfo[_user];
 
         uint256 accERC20PerShare = pool.accERC20PerShare;
         uint256 tokenSupply = pool.totalDeposits;
@@ -134,7 +121,7 @@ contract SingleSidedFarm is Ownable {
             uint256 lastBlock = block.number < endBlock ? block.number : endBlock;
             uint256 blockToCompare = pool.lastRewardBlock < endBlock ? pool.lastRewardBlock : endBlock;
             uint256 nrOfBlocks = lastBlock.sub(blockToCompare);
-            uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
+            uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock);
             accERC20PerShare = accERC20PerShare.add(erc20Reward.mul(1e36).div(tokenSupply));
         }
 
@@ -153,15 +140,11 @@ contract SingleSidedFarm is Ownable {
 
     // Update reward variables for all pools. Be careful of gas spending!
     function massUpdatePools() public {
-        uint256 length = poolInfo.length;
-        for (uint256 pid = 0; pid < length; ++pid) {
-            updatePool(pid);
-        }
+        updatePool();
     }
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) public {
-        PoolInfo storage pool = poolInfo[_pid];
+    function updatePool() public {
         uint256 lastBlock = block.number < endBlock ? block.number : endBlock;
 
         if (lastBlock <= pool.lastRewardBlock) {
@@ -176,19 +159,18 @@ contract SingleSidedFarm is Ownable {
         }
 
         uint256 nrOfBlocks = lastBlock.sub(pool.lastRewardBlock);
-        uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
+        uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock);
 
         pool.accERC20PerShare = pool.accERC20PerShare.add(erc20Reward.mul(1e36).div(tokenSupply));
         pool.lastRewardBlock = block.number;
     }
 
     // Deposit LP tokens to Farm for ERC20 allocation.
-    function deposit(uint256 _pid, uint256 _amount) external {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+    function deposit(uint256 _amount) external {
+        UserInfo storage user = userInfo[msg.sender];
 
         // Update pool
-        updatePool(_pid);
+        updatePool();
 
         if (user.amount > 0) {
             uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
@@ -206,16 +188,15 @@ contract SingleSidedFarm is Ownable {
         user.depositTime = block.timestamp;
 
         // Emit deposit event
-        emit Deposit(msg.sender, _pid, _amount);
+        emit Deposit(msg.sender, _amount);
     }
 
     // Withdraw LP tokens from Farm.
-    function withdraw(uint256 _pid, uint256 _amount) external {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+    function withdraw(uint256 _amount) external {
+        UserInfo storage user = userInfo[msg.sender];
 
         require(user.amount >= _amount, "withdraw: can't withdraw more than deposit");
-        updatePool(_pid);
+        updatePool();
 
         uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
         erc20Transfer(msg.sender, pendingAmount);
@@ -227,18 +208,17 @@ contract SingleSidedFarm is Ownable {
         pool.totalDeposits = pool.totalDeposits.sub(_amount);
 
         // Emit Withdraw event
-        emit Withdraw(msg.sender, _pid, _amount);
+        emit Withdraw(msg.sender, _amount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw(uint256 _pid) external {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+    function emergencyWithdraw() external {
+        UserInfo storage user = userInfo[msg.sender];
 
         pool.tokenStaked.safeTransfer(address(msg.sender), user.amount);
         pool.totalDeposits = pool.totalDeposits.sub(user.amount);
 
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
+        emit EmergencyWithdraw(msg.sender, user.amount);
 
         user.amount = 0;
         user.rewardDebt = 0;
