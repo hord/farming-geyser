@@ -134,7 +134,7 @@ contract SingleSidedFarm is Ownable {
             uint256 blockToCompare = pool.lastRewardBlock < endBlock ? pool.lastRewardBlock : endBlock;
             uint256 nrOfBlocks = lastBlock.sub(blockToCompare);
             uint256 erc20Reward = nrOfBlocks.mul(rewardPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-            accERC20PerShare = accERC20PerShare.add(erc20Reward.mul(1e36).div(lpSupply));
+            accERC20PerShare = accERC20PerShare.add(erc20Reward.mul(1e36).div(tokenSupply));
         }
 
         return user.amount.mul(accERC20PerShare).div(1e36).sub(user.rewardDebt);
