@@ -15,7 +15,7 @@ contract SingleSidedFarm is Ownable {
     enum EarlyWithdrawPenalty { BURN_REWARDS, REDISTRIBUTE_REWARDS }
 
     // Info of each user.
-    struct UserInfo {
+    struct StakeInfo {
         uint256 amount;             // How many tokens the user has provided.
         uint256 rewardDebt;         // Reward debt. See explanation below.
         uint256 depositTime;        // Time when user deposited.
@@ -46,7 +46,7 @@ contract SingleSidedFarm is Ownable {
     // Info of each pool.
     PoolInfo public pool;
     // Info of each user that stakes LP tokens.
-    mapping (address => UserInfo) public userInfo;
+    mapping (address => StakeInfo[]) public stakeInfo;
     // The block number when farming starts.
     uint256 public startBlock;
     // The block number when farming ends.
@@ -55,9 +55,9 @@ contract SingleSidedFarm is Ownable {
     EarlyWithdrawPenalty public penalty;
 
     // Events
-    event Deposit(address indexed user, uint256 amount);
-    event Withdraw(address indexed user, uint256 amount);
-    event EmergencyWithdraw(address indexed user, uint256 amount);
+    event Deposit(address indexed user, uint256 stakeId, uint256 amount);
+    event Withdraw(address indexed user, uint256 stakeId, uint256 amount);
+    event EmergencyWithdraw(address indexed user, uint256 stakeId, uint256 amount);
 
 
     constructor(
@@ -83,10 +83,15 @@ contract SingleSidedFarm is Ownable {
 
     // Fund the farm, increase the end block
     function fund(uint256 _amount) external {
+        fundInternal(_amount);
+        erc20.safeTransferFrom(address(msg.sender), address(this), _amount);
+    }
+
+    // Internally fund the farm by adding farmed rewards by user to the end
+    function fundInternal(uint _amount) internal {
         require(block.number < endBlock, "fund: too late, the farm is closed");
         require(_amount > 0, "Amount must be greater than 0.");
-
-        erc20.safeTransferFrom(address(msg.sender), address(this), _amount);
+        // Compute new end block
         endBlock += _amount.div(rewardPerBlock);
         // Increase farm total rewards
         totalRewards = totalRewards.add(_amount);
@@ -98,7 +103,7 @@ contract SingleSidedFarm is Ownable {
         require(address(pool.tokenStaked) == address(0x0), "Pool can be set only once.");
 
         if (_withUpdate) {
-            massUpdatePools();
+            updatePool();
         }
         uint256 lastRewardBlock = block.number > startBlock ? block.number : startBlock;
 
@@ -111,15 +116,19 @@ contract SingleSidedFarm is Ownable {
     }
 
     // View function to see deposited LP for a user.
-    function deposited(address _user) external view returns (uint256) {
-        UserInfo storage user = userInfo[_user];
-        return user.amount;
+    function deposited(address _user, uint256 stakeId) public view returns (uint256) {
+        StakeInfo storage stake = stakeInfo[_user][stakeId];
+        return stake.amount;
     }
 
 
     // View function to see pending ERC20s for a user.
-    function pending(address _user) external view returns (uint256) {
-        UserInfo storage user = userInfo[_user];
+    function pending(address _user, uint256 stakeId) public view returns (uint256) {
+        StakeInfo storage stake = stakeInfo[_user][stakeId];
+
+        if(stake.amount == 0) {
+            return 0;
+        }
 
         uint256 accERC20PerShare = pool.accERC20PerShare;
         uint256 tokenSupply = pool.totalDeposits;
@@ -132,7 +141,7 @@ contract SingleSidedFarm is Ownable {
             accERC20PerShare = accERC20PerShare.add(erc20Reward.mul(1e36).div(tokenSupply));
         }
 
-        return user.amount.mul(accERC20PerShare).div(1e36).sub(user.rewardDebt);
+        return stake.amount.mul(accERC20PerShare).div(1e36).sub(stake.rewardDebt);
     }
 
     // View function for total reward the farm has yet to pay out.
@@ -143,11 +152,6 @@ contract SingleSidedFarm is Ownable {
 
         uint256 lastBlock = block.number < endBlock ? block.number : endBlock;
         return rewardPerBlock.mul(lastBlock - startBlock).sub(paidOut);
-    }
-
-    // Update reward variables for all pools. Be careful of gas spending!
-    function massUpdatePools() public {
-        updatePool();
     }
 
     // Update reward variables of the given pool to be up-to-date.
@@ -174,15 +178,10 @@ contract SingleSidedFarm is Ownable {
 
     // Deposit LP tokens to Farm for ERC20 allocation.
     function deposit(uint256 _amount) external {
-        UserInfo storage user = userInfo[msg.sender];
+        StakeInfo memory stake;
 
         // Update pool
         updatePool();
-
-        if (user.amount > 0) {
-            uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
-            erc20Transfer(msg.sender, pendingAmount);
-        }
 
         // Take token and transfer to contract
         pool.tokenStaked.safeTransferFrom(address(msg.sender), address(this), _amount);
@@ -190,45 +189,93 @@ contract SingleSidedFarm is Ownable {
         pool.totalDeposits = pool.totalDeposits.add(_amount);
 
         // Update user accounting
-        user.amount = user.amount.add(_amount);
-        user.rewardDebt = user.amount.mul(pool.accERC20PerShare).div(1e36);
-        user.depositTime = block.timestamp;
+        stake.amount = _amount;
+        stake.rewardDebt = stake.amount.mul(pool.accERC20PerShare).div(1e36);
+        stake.depositTime = block.timestamp;
+
+        uint stakeId = stakeInfo[msg.sender].length;
+
+        // Push new stake to array of stakes for user
+        stakeInfo[msg.sender].push(stake);
 
         // Emit deposit event
-        emit Deposit(msg.sender, _amount);
+        emit Deposit(msg.sender, stakeId, _amount);
     }
 
     // Withdraw LP tokens from Farm.
-    function withdraw(uint256 _amount) external {
-        UserInfo storage user = userInfo[msg.sender];
+    function withdraw(uint256 _amount, uint256 stakeId) external {
+        StakeInfo storage stake = stakeInfo[msg.sender][stakeId];
 
-        require(user.amount >= _amount, "withdraw: can't withdraw more than deposit");
+        require(stake.amount >= _amount, "withdraw: can't withdraw more than deposit");
+
         updatePool();
 
-        uint256 pendingAmount = user.amount.mul(pool.accERC20PerShare).div(1e36).sub(user.rewardDebt);
-        erc20Transfer(msg.sender, pendingAmount);
+        bool minimalTimeStakeRespected = stake.depositTime.add(minTimeToStake) <= block.timestamp;
 
-        user.amount = user.amount.sub(_amount);
-        user.rewardDebt = user.amount.mul(pool.accERC20PerShare).div(1e36);
+        // if early withdraw is not allowed, user can't withdraw funds before
+        if(!isEarlyWithdrawAllowed) {
+            // Check if user has respected minimal time to stake, require it.
+           require(minimalTimeStakeRespected, "User can not withdraw funds yet.");
+        }
+
+        // Compute pending rewards amount of user rewards
+        uint256 pendingAmount = stake.amount.mul(pool.accERC20PerShare).div(1e36).sub(stake.rewardDebt);
+
+        // Penalties in case user didn't stake enough time
+        if(penalty == EarlyWithdrawPenalty.BURN_REWARDS && !minimalTimeStakeRespected) {
+            // Burn to address (1)
+            erc20Transfer(address(1), pendingAmount);
+        } else if (penalty == EarlyWithdrawPenalty.REDISTRIBUTE_REWARDS && !minimalTimeStakeRespected) {
+            // Re-fund the farm
+            fundInternal(pendingAmount);
+        } else {
+            // In case either there's no penalty
+            erc20Transfer(msg.sender, pendingAmount);
+        }
+
+
+        stake.amount = stake.amount.sub(_amount);
+        stake.rewardDebt = stake.amount.mul(pool.accERC20PerShare).div(1e36);
 
         pool.tokenStaked.safeTransfer(address(msg.sender), _amount);
         pool.totalDeposits = pool.totalDeposits.sub(_amount);
 
         // Emit Withdraw event
-        emit Withdraw(msg.sender, _amount);
+        emit Withdraw(msg.sender, stakeId, _amount);
     }
 
+
     // Withdraw without caring about rewards. EMERGENCY ONLY.
-    function emergencyWithdraw() external {
-        UserInfo storage user = userInfo[msg.sender];
+    function emergencyWithdraw(uint256 stakeId) external {
+        StakeInfo storage stake = stakeInfo[msg.sender][stakeId];
 
-        pool.tokenStaked.safeTransfer(address(msg.sender), user.amount);
-        pool.totalDeposits = pool.totalDeposits.sub(user.amount);
+        pool.tokenStaked.safeTransfer(address(msg.sender), stake.amount);
+        pool.totalDeposits = pool.totalDeposits.sub(stake.amount);
 
-        emit EmergencyWithdraw(msg.sender, user.amount);
+        emit EmergencyWithdraw(msg.sender, stakeId, stake.amount);
 
-        user.amount = 0;
-        user.rewardDebt = 0;
+        stake.amount = 0;
+        stake.rewardDebt = 0;
+    }
+
+    // Get number of stakes user has
+    function getNumberOfUserStakes(address user) external view returns (uint256){
+        return stakeInfo[user].length;
+    }
+
+    // Get user pending amounts and stakes
+    function getUserStakesAndPendingAmounts(address user) external view returns (uint256[] memory, uint256[] memory) {
+        uint256 numberOfStakes = stakeInfo[user].length;
+
+        uint256[] memory deposits = new uint256[](numberOfStakes);
+        uint256[] memory pendingAmounts = new uint256[](numberOfStakes);
+
+        for (uint i = 0; i < numberOfStakes; i++) {
+            deposits[i] = deposited(user, i);
+            pendingAmounts[i] = pending(user, i);
+        }
+
+        return (deposits, pendingAmounts);
     }
 
     // Transfer ERC20 and update the required ERC20 to payout all rewards
