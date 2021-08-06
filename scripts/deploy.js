@@ -5,7 +5,7 @@ const { ethers, web3, upgrades } = hre
 async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name];
 
-    const startBlock = 12970496; // 2 pm UTC 7th June 2021
+    const startBlock = 12970910;
     const rewardPerBlock = ethers.utils.parseEther("0.669"); // 1.003087 token per block
 
     const Farm = await hre.ethers.getContractFactory('Farm');
