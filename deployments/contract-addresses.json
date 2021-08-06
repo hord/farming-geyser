@@ -5,8 +5,7 @@
         "Farm": "0x0611b7DbE94682c7053Cf64c92b14A31cb69225d"
     },
     "mainnet": {
-        "LpToken": "0xa14e051af256157ce093aa54cb3b2f775358f559",
-        "RewardsToken": "0x7659ce147d0e714454073a5dd7003544234b6aa0",
-        "Farm": "0x50085E7E3ae297cA1894bBb11cF2829568DfA013"
+        "LpToken": "0x6f118ecebc31a5ffe49b87c47ea80f93a2af0a8a",
+        "RewardsToken": "0x7659ce147d0e714454073a5dd7003544234b6aa0"
     }
 }
