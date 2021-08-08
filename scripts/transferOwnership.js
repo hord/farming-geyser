@@ -11,7 +11,7 @@ async function main() {
     // Get current farm owner
     const currentOwner = await farm.owner();
     // Transfer ownership to chainportCongress
-    await farm.transferOwnership(chainportCongress);
+    const tx = await farm.transferOwnership(chainportCongress);
     // Checksum
     const newOwner = await farm.owner();
     // Log
